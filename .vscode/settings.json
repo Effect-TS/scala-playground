@@ -1,0 +1,33 @@
+{
+  "editor.formatOnSave": false,
+  "files.watcherExclude": {
+    "**/target": true
+  },
+  "nix.enableLanguageServer": true,
+  "nix.formatterPath": [
+    "nix",
+    "fmt",
+    "--",
+    "-"
+  ],
+  "nix.serverPath": "nil",
+  "nix.serverSettings": {
+    "nil": {
+      "diagnostics": {
+        "ignored": [
+          "unused_binding",
+          "unused_with"
+        ]
+      },
+      "formatting": {
+        "command": [
+          "alejandra"
+        ]
+      }
+    }
+  },
+  "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
+  "[nix]": {
+    "editor.formatOnSave": true
+  },
+}

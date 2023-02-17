@@ -1,0 +1,20 @@
+# MacOS
+.DS_Store
+
+# Direnv
+.direnv
+
+# Scala
+target
+
+# Bloop
+.bloop
+.bsp/
+
+# Metals
+.metals
+metals.sbt
+*/metals.sbt
+project/metals.sbt
+project/project/
+project/project/metals.sbt
