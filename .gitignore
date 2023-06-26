@@ -7,6 +7,9 @@
 # Scala
 target
 
+# Scala CLI
+.scala-build
+
 # Bloop
 .bloop
 .bsp/

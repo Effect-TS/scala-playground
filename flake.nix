@@ -1,69 +1,75 @@
 {
   inputs = {
     nixpkgs = {
-      url = "github:nixos/nixpkgs/nixos-22.11";
+      url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    };
+
+    flake-utils = {
+      url = "github:numtide/flake-utils";
     };
   };
 
   outputs = inputs @ {
     self,
     nixpkgs,
+    flake-utils,
     ...
-  }: let
-    forAllSystems = nixpkgs.lib.genAttrs [
-      "x86_64-darwin"
-      "x86_64-linux"
-      "aarch64-darwin"
-      "aarch64-linux"
-    ];
+  }:
+    flake-utils.lib.eachDefaultSystem (system: let
+      javaOverlay = java: (final: _: {
+        jdk = final.${java};
+        jre = final.${java};
+      });
 
-    pkgsFor = system: nixpkgs.legacyPackages.${system};
+      javaOverlays = {
+        java17 = javaOverlay "graalvm17-ce";
+        java11 = javaOverlay "graalvm11-ce";
+        java8 = javaOverlay "openjdk8";
+      };
 
-    javaOverlay = java: (final: _: {
-      jdk = final.${java};
-      jre = final.${java};
-    });
+      pkgs = nixpkgs.legacyPackages.${system};
 
-    javaOverlays = {
-      java17 = javaOverlay "graalvm17-ce";
-      java11 = javaOverlay "graalvm11-ce";
-      java8 = javaOverlay "openjdk8";
-    };
-  in {
-    formatter = forAllSystems (
-      system: let
-        pkgs = pkgsFor system;
-      in
-        pkgs.alejandra
-    );
-
-    devShells = forAllSystems (system: let
-      pkgs = pkgsFor system;
+      makeBuildInputs = pkgs: (with pkgs; [
+        alejandra
+        coursier
+        git
+        jdk
+        nix
+        nil
+        scalafmt
+        scala-cli
+      ]);
     in {
-      default = pkgs.callPackage "${self}/shell.nix" {
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [javaOverlays.java8];
+      formatter = pkgs.alejandra;
+
+      devShells = {
+        default = pkgs.mkShell {
+          buildInputs = makeBuildInputs (import nixpkgs {
+            inherit system;
+            overlays = [javaOverlays.java17];
+          });
         };
-      };
-      java17 = pkgs.callPackage "${self}/shell.nix" {
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [javaOverlays.java17];
+
+        java8 = pkgs.mkShell {
+          buildInputs = makeBuildInputs (import nixpkgs {
+            inherit system;
+            overlays = [javaOverlays.java8];
+          });
         };
-      };
-      java11 = pkgs.callPackage "${self}/shell.nix" {
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [javaOverlays.java11];
+
+        java11 = pkgs.mkShell {
+          buildInputs = makeBuildInputs (import nixpkgs {
+            inherit system;
+            overlays = [javaOverlays.java11];
+          });
         };
-      };
-      java8 = pkgs.callPackage "${self}/shell.nix" {
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [javaOverlays.java8];
+
+        java17 = pkgs.mkShell {
+          buildInputs = makeBuildInputs (import nixpkgs {
+            inherit system;
+            overlays = [javaOverlays.java17];
+          });
         };
       };
     });
-  };
 }
